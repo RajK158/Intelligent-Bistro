@@ -12,6 +12,9 @@ import {
   Dimensions,
 } from "react-native";
 import { menuItems, MenuItem } from "../data/menu";
+import { CartItem } from "./OrderTicketModal";
+
+const API_BASE_URL = "http://localhost:4000";
 
 const SHEET_HEIGHT = Dimensions.get("window").height * 0.6;
 
@@ -31,8 +34,8 @@ interface ChatMessage {
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSend: (message: string) => void;
-  onAddToCart: (item: MenuItem) => void;
+  cart: CartItem[];
+  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
 }
 
 function normalize(s: string): string {
@@ -272,7 +275,7 @@ function generateResponse(msg: string, lastSuggested: MenuItem[]): VResult {
   };
 }
 
-export default function AIOrderingModal({ visible, onClose, onSend, onAddToCart }: Props) {
+export default function AIOrderingModal({ visible, onClose, cart, setCart }: Props) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -282,6 +285,8 @@ export default function AIOrderingModal({ visible, onClose, onSend, onAddToCart 
     },
   ]);
   const [lastSuggested, setLastSuggested] = useState<MenuItem[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [chips, setChips] = useState<string[]>(promptChips);
   const chatScrollRef = useRef<ScrollView>(null);
   const idCounter = useRef(1);
 
@@ -299,31 +304,124 @@ export default function AIOrderingModal({ visible, onClose, onSend, onAddToCart 
     }, 50);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!text.trim()) return;
     const userText = text.trim();
     const userId = `user-${idCounter.current++}`;
-    const vId = `v-${idCounter.current++}`;
 
     setMessages((prev) => [...prev, { id: userId, role: "user", text: userText }]);
     setText("");
-    onSend(userText);
     scrollToBottom();
+    setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const chatHistory = messages.map((m) => ({
+        role: m.role === "v" ? "assistant" : "user",
+        content: m.text,
+      }));
+
+      const formattedCart = cart.map((ci) => ({
+        itemId: ci.item.id,
+        name: ci.item.name,
+        price: ci.item.price,
+        quantity: ci.quantity,
+      }));
+
+      const response = await fetch(`${API_BASE_URL}/api/ai/order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: userText,
+          cart: formattedCart,
+          history: chatHistory,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      setIsTyping(false);
+
+      const vId = `v-${idCounter.current++}`;
+      setMessages((prev) => [...prev, { id: vId, role: "v", text: data.reply }]);
+
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        setChips(data.suggestions);
+      }
+
+      if (data.actions && Array.isArray(data.actions)) {
+        setCart((prev) => {
+          let newCart = [...prev];
+          for (const action of data.actions) {
+            if (action.type === "ADD_ITEM") {
+              const item = menuItems.find((i) => i.id === action.itemId);
+              if (item) {
+                const qty = action.quantity ?? 1;
+                const existing = newCart.find((ci) => ci.item.id === item.id);
+                if (existing) {
+                  newCart = newCart.map((ci) =>
+                    ci.item.id === item.id ? { ...ci, quantity: ci.quantity + qty } : ci
+                  );
+                } else {
+                  newCart.push({ item, quantity: qty });
+                }
+              }
+            } else if (action.type === "REMOVE_ITEM") {
+              newCart = newCart.filter((ci) => ci.item.id !== action.itemId);
+            } else if (action.type === "UPDATE_QUANTITY") {
+              const item = menuItems.find((i) => i.id === action.itemId);
+              if (item) {
+                const qty = action.quantity ?? 0;
+                if (qty <= 0) {
+                  newCart = newCart.filter((ci) => ci.item.id !== action.itemId);
+                } else {
+                  const existing = newCart.find((ci) => ci.item.id === item.id);
+                  if (existing) {
+                    newCart = newCart.map((ci) =>
+                      ci.item.id === item.id ? { ...ci, quantity: qty } : ci
+                    );
+                  } else {
+                    newCart.push({ item, quantity: qty });
+                  }
+                }
+              }
+            } else if (action.type === "CLEAR_CART") {
+              newCart = [];
+            }
+          }
+          return newCart;
+        });
+      }
+      scrollToBottom();
+    } catch (err) {
+      console.error(err);
       const result = generateResponse(userText, lastSuggested);
-      setMessages((prev) => [
-        ...prev,
-        { id: vId, role: "v", text: result.text },
-      ]);
+      setIsTyping(false);
+
+      const vId = `v-${idCounter.current++}`;
+      setMessages((prev) => [...prev, { id: vId, role: "v", text: result.text }]);
+
       if (result.suggested.length > 0) {
         setLastSuggested(result.suggested);
       }
+
       if (result.addItem) {
-        onAddToCart(result.addItem);
+        setCart((prev) => {
+          const existing = prev.find((ci) => ci.item.id === result.addItem?.id);
+          if (existing) {
+            return prev.map((ci) =>
+              ci.item.id === result.addItem?.id ? { ...ci, quantity: ci.quantity + 1 } : ci
+            );
+          }
+          return [...prev, { item: result.addItem!, quantity: 1 }];
+        });
       }
       scrollToBottom();
-    }, 400);
+    }
   };
 
   const handleChip = (chip: string) => {
@@ -389,6 +487,12 @@ export default function AIOrderingModal({ visible, onClose, onSend, onAddToCart 
                   </Text>
                 </View>
               ))}
+              {isTyping && (
+                <View style={[styles.messageBubble, styles.vBubble]}>
+                  <Text style={styles.vLabel}>✦ V</Text>
+                  <Text style={styles.typingText}>V is thinking...</Text>
+                </View>
+              )}
             </ScrollView>
 
             <View style={styles.bottomSection}>
@@ -399,7 +503,7 @@ export default function AIOrderingModal({ visible, onClose, onSend, onAddToCart 
                 contentContainerStyle={styles.chipsContainer}
                 keyboardShouldPersistTaps="handled"
               >
-                {promptChips.map((chip) => (
+                {chips.map((chip) => (
                   <TouchableOpacity
                     key={chip}
                     style={styles.chip}
@@ -638,5 +742,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#111111",
+  },
+  typingText: {
+    fontSize: 14,
+    color: "#8a7e6b",
+    fontStyle: "italic",
   },
 });

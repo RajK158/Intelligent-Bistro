@@ -12,7 +12,7 @@ export const categories = ["Chef Picks", "Mains", "Sides", "Drinks", "Dessert"];
 
 export const menuItems: MenuItem[] = [
   {
-    id: "2",
+    id: "spicy_chicken_sandwich",
     name: "Spicy Chicken Sandwich",
     description: "Crispy buttermilk chicken, sriracha mayo, pickled slaw",
     tag: "Popular",
@@ -21,7 +21,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=400&q=80",
   },
   {
-    id: "1",
+    id: "truffle_wagyu_burger",
     name: "Truffle Wagyu Burger",
     description: "A5 wagyu patty with black truffle aioli, aged gruyère, brioche",
     tag: "Chef's Pick",
@@ -30,7 +30,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80",
   },
   {
-    id: "3",
+    id: "lobster_bisque",
     name: "Lobster Bisque",
     description: "Creamy Maine lobster bisque with cognac cream and chive oil",
     tag: "Signature",
@@ -39,7 +39,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=80",
   },
   {
-    id: "4",
+    id: "garden_risotto",
     name: "Garden Risotto",
     description: "Arborio rice with seasonal vegetables and aged parmesan foam",
     tag: "Vegetarian",
@@ -48,7 +48,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&q=80",
   },
   {
-    id: "5",
+    id: "charred_cauliflower_steak",
     name: "Charred Cauliflower Steak",
     description: "Whole roasted cauliflower with romesco, capers, and herb gremolata",
     tag: "Plant-Based",
@@ -57,7 +57,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1510627498534-cf7e9002facc?w=400&q=80",
   },
   {
-    id: "6",
+    id: "pan_seared_salmon",
     name: "Pan-Seared Salmon",
     description: "Atlantic salmon with citrus beurre blanc and asparagus",
     tag: "Healthy",
@@ -66,7 +66,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80",
   },
   {
-    id: "7",
+    id: "rosemary_fries",
     name: "Rosemary Fries",
     description: "Hand-cut triple-fried potatoes with rosemary salt and truffle dip",
     tag: "Shareable",
@@ -75,7 +75,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&q=80",
   },
   {
-    id: "8",
+    id: "large_still_water",
     name: "Large Still Water",
     description: "Premium still mineral water, 750ml bottle",
     tag: "Refreshing",
@@ -84,7 +84,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&q=80",
   },
   {
-    id: "9",
+    id: "sparkling_water",
     name: "Sparkling Water",
     description: "Fine sparkling mineral water with natural carbonation",
     tag: "Classic",
@@ -93,7 +93,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&q=80",
   },
   {
-    id: "10",
+    id: "mango_cooler",
     name: "Mango Cooler",
     description: "Fresh mango purée, lime, sparkling water, and mint",
     tag: "Tropical",
@@ -102,7 +102,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1546173159-315724a31696?w=400&q=80",
   },
   {
-    id: "11",
+    id: "iced_citrus_tea",
     name: "Iced Citrus Tea",
     description: "House-brewed black tea with orange, lemon, and raw honey",
     tag: "Fresh",
@@ -111,7 +111,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80",
   },
   {
-    id: "12",
+    id: "chocolate_souffle",
     name: "Chocolate Soufflé",
     description: "Warm Valrhona chocolate soufflé with crème anglaise",
     tag: "Indulgent",
@@ -120,7 +120,7 @@ export const menuItems: MenuItem[] = [
     image: "https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?w=400&q=80",
   },
   {
-    id: "13",
+    id: "vanilla_bean_panna_cotta",
     name: "Vanilla Bean Panna Cotta",
     description: "Silky Tahitian vanilla custard with berry compote and pistachios",
     tag: "Classic",

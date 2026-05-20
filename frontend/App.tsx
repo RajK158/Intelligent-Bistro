@@ -145,8 +145,8 @@ export default function App() {
         <AIOrderingModal
           visible={aiModalVisible}
           onClose={() => setAiModalVisible(false)}
-          onSend={handleAISend}
-          onAddToCart={handleAddItem}
+          cart={cart}
+          setCart={setCart}
         />
 
         <OrderTicketModal
