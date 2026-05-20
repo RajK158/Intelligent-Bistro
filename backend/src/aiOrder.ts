@@ -237,6 +237,28 @@ function cleanString(s: string): string {
     .trim();
 }
 
+function includesAny(text: string, terms: string[]): boolean {
+  return terms.some((term) => text.includes(term));
+}
+
+function getNonVegetarianSuggestions(): AIResponse {
+  const suggestions = [
+    "Add Spicy Chicken Sandwich",
+    "Add Truffle Wagyu Burger",
+    "Add Lobster Bisque",
+  ];
+
+  if (menuItems.some((item) => item.id === "pan_seared_sea_bass")) {
+    suggestions.push("Add Pan-Seared Sea Bass");
+  }
+
+  return {
+    reply: "I can suggest Spicy Chicken Sandwich, Truffle Wagyu Burger, or Lobster Bisque.",
+    actions: [],
+    suggestions,
+  };
+}
+
 const ITEM_ALIASES: Record<string, string[]> = {
   spicy_chicken_sandwich: ["spicy chicken sandwich", "spicy chicken", "chicken sandwich", "sandwich"],
   truffle_wagyu_burger: ["truffle wagyu burger", "wagyu burger", "wagyu", "burger"],
@@ -354,7 +376,40 @@ function buildFallbackResponse(message: string, history: unknown[] = []): AIResp
   const followUpResult = resolveFollowUp(msg, history);
   if (followUpResult) return followUpResult;
 
-  if (msg.includes("veg") || msg.includes("plant") || msg.includes("meatless") || msg.includes("no meat")) {
+  if (msg.includes("pizza")) {
+    return {
+      reply: "Pizza is not on Velora Bistro's menu, but I can suggest Spicy Chicken Sandwich, Truffle Wagyu Burger, or Lobster Bisque.",
+      actions: [],
+      suggestions: ["Add Spicy Chicken Sandwich", "Add Truffle Wagyu Burger", "Add Lobster Bisque"],
+    };
+  }
+
+  const isNonVegetarianRequest = includesAny(msg, [
+    "non veg",
+    "nonveg",
+    "non-veg",
+    "non vegetarian",
+    "nonvegetarian",
+    "non-vegetarian",
+    "meat",
+    "chicken",
+    "burger",
+    "seafood",
+  ]);
+
+  const isVegetarianRequest = !isNonVegetarianRequest && includesAny(msg, [
+    "veg",
+    "vegetarian",
+    "plant",
+    "meatless",
+    "no meat",
+  ]);
+
+  if (isNonVegetarianRequest) {
+    return getNonVegetarianSuggestions();
+  }
+
+  if (isVegetarianRequest) {
     return {
       reply: "For vegetarian options, I recommend Garden Risotto ($26) or Charred Cauliflower Steak ($22). Want me to add one?",
       actions: [],
@@ -403,11 +458,7 @@ function buildFallbackResponse(message: string, history: unknown[] = []): AIResp
   }
 
   if (msg.includes("salmon") || msg.includes("fish") || msg.includes("seafood")) {
-    return {
-      reply: "We have Pan-Seared Salmon ($42) and Lobster Bisque ($24). Want me to add one?",
-      actions: [],
-      suggestions: ["Add Pan-Seared Salmon", "Add Lobster Bisque"],
-    };
+    return getNonVegetarianSuggestions();
   }
 
   if (msg.includes("recommend") || msg.includes("suggest") || msg.includes("popular") || msg.includes("best")) {
