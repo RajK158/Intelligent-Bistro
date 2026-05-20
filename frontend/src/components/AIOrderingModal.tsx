@@ -275,6 +275,22 @@ function generateResponse(msg: string, lastSuggested: MenuItem[]): VResult {
   };
 }
 
+function deriveChipsFromReply(reply: string): string[] {
+  const cleanReply = reply.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const found: { name: string; index: number }[] = [];
+
+  for (const item of menuItems) {
+    const cleanItemName = item.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const idx = cleanReply.indexOf(cleanItemName);
+    if (idx !== -1) {
+      found.push({ name: item.name, index: idx });
+    }
+  }
+
+  found.sort((a, b) => a.index - b.index);
+  return found.map((f) => `Add ${f.name}`);
+}
+
 export default function AIOrderingModal({ visible, onClose, cart, setCart }: Props) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -349,8 +365,22 @@ export default function AIOrderingModal({ visible, onClose, cart, setCart }: Pro
       const vId = `v-${idCounter.current++}`;
       setMessages((prev) => [...prev, { id: vId, role: "v", text: data.reply }]);
 
+      let finalSuggestions: string[] = [];
       if (data.suggestions && Array.isArray(data.suggestions)) {
-        setChips(data.suggestions);
+        finalSuggestions = [...data.suggestions];
+      }
+
+      const derived = deriveChipsFromReply(data.reply);
+      for (const d of derived) {
+        if (!finalSuggestions.some((s) => s.toLowerCase().includes(d.toLowerCase()))) {
+          finalSuggestions.push(d);
+        }
+      }
+
+      if (finalSuggestions.length === 0) {
+        setChips(promptChips);
+      } else {
+        setChips(finalSuggestions);
       }
 
       if (data.actions && Array.isArray(data.actions)) {
@@ -407,6 +437,20 @@ export default function AIOrderingModal({ visible, onClose, cart, setCart }: Pro
 
       if (result.suggested.length > 0) {
         setLastSuggested(result.suggested);
+      }
+
+      let finalSuggestions: string[] = [];
+      const derived = deriveChipsFromReply(result.text);
+      for (const d of derived) {
+        if (!finalSuggestions.some((s) => s.toLowerCase().includes(d.toLowerCase()))) {
+          finalSuggestions.push(d);
+        }
+      }
+
+      if (finalSuggestions.length === 0) {
+        setChips(promptChips);
+      } else {
+        setChips(finalSuggestions);
       }
 
       if (result.addItem) {
